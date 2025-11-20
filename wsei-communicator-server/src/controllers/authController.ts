@@ -76,6 +76,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
     res.json({
+      token: token,
       user: { id: user._id, email: user.email, nickname: user.nickname }
     });
   } catch (err) {

@@ -34,7 +34,7 @@ const handleSubmit = async () => {
       await authStore.register(email.value, password.value, passwordConfirm.value, nickname.value)
     }
     
-    router.push('/chat')
+    router.push('/')
   } catch (err: any) {
     errorMessage.value = authStore.error || 'An error occurred'
   } finally {
