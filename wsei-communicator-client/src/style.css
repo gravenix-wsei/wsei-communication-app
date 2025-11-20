@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+* {
+  @apply transition-colors duration-200;
+}
+
+body {
+  @apply bg-gray-50;
+}

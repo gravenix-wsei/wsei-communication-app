@@ -2,6 +2,17 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import Message from '../models/Message';
+import User from '../models/User';
+
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await User.find({}, { _id: 1, email: 1, nickname: 1 });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Failed to fetch users', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+};
 
 export const sendMessage = async (req: Request, res: Response) => {
   // senderId should NOT be provided in the body. It must come from signed JWT in cookie.

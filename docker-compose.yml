@@ -17,7 +17,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - ./wsei-communicator-server/.env.example
+      - ./wsei-communicator-server/.env
     depends_on:
       - mongo
 

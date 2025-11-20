@@ -1,0 +1,84 @@
+import { ref, computed } from 'vue'
+import { defineStore } from 'pinia'
+import apiClient from '@/api/client'
+
+export interface ChatUser {
+  _id: string
+  email: string
+  nickname?: string
+}
+
+export interface Message {
+  _id: string
+  sender: string
+  recipient: string
+  content: string
+  createdAt: string
+}
+
+export const useChatStore = defineStore('chat', () => {
+  const users = ref<ChatUser[]>([])
+  const messages = ref<Message[]>([])
+  const selectedUserId = ref<string | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  const selectedUser = computed(() => users.value.find(u => u._id === selectedUserId.value))
+  const sortedMessages = computed(() => [...messages.value].sort((a, b) => 
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  ))
+
+  const fetchUsers = async () => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.get('/api/users')
+      users.value = response.data
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'Failed to fetch users'
+      console.error('Failed to fetch users:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const loadMessages = async (userId: string) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await apiClient.get('/api/messages/load', {
+        params: { userId }
+      })
+      messages.value = response.data
+      selectedUserId.value = userId
+    } catch (err: any) {
+      error.value = err.response?.data?.error || 'Failed to load messages'
+      console.error('Failed to load messages:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const addMessage = (message: Message) => {
+    messages.value.push(message)
+  }
+
+  const clearMessages = () => {
+    messages.value = []
+    selectedUserId.value = null
+  }
+
+  return {
+    users,
+    messages,
+    selectedUserId,
+    selectedUser,
+    sortedMessages,
+    loading,
+    error,
+    fetchUsers,
+    loadMessages,
+    addMessage,
+    clearMessages
+  }
+})
