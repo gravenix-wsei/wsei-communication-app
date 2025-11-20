@@ -1,0 +1,25 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  server:
+    image: node:22
+    working_dir: /usr/src/app
+    volumes:
+      - ./wsei-communicator-server:/usr/src/app
+      - /usr/src/app/node_modules
+    command: sh -c "npm install --silent && npm run start"
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./wsei-communicator-server/.env.example
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
