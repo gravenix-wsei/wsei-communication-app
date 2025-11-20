@@ -2,7 +2,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
 import { register, login } from './controllers/authController';
+import sendMessage from './controllers/messageController';
 
 dotenv.config();
 
@@ -16,9 +18,11 @@ async function start() {
   const app = express();
   app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
   app.use(express.json());
+  app.use(cookieParser()); // enable reading JWT from cookies
 
   app.post('/api/auth/register', register);
   app.post('/api/auth/login', login);
+  app.post('/api/messages/send', sendMessage);
 
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
