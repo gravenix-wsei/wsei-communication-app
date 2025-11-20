@@ -4,7 +4,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import { register, login } from './controllers/authController';
-import sendMessage from './controllers/messageController';
+import { sendMessage, loadMessages } from './controllers/messageController';
 
 dotenv.config();
 
@@ -23,6 +23,7 @@ async function start() {
   app.post('/api/auth/register', register);
   app.post('/api/auth/login', login);
   app.post('/api/messages/send', sendMessage);
+  app.get('/api/messages/load', loadMessages);
 
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

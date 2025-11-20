@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import Message from '../models/Message';
 
-async function sendMessage(req: Request, res: Response) {
+export const sendMessage = async (req: Request, res: Response) => {
   // senderId should NOT be provided in the body. It must come from signed JWT in cookie.
   const { recipientId, content } = req.body;
 
@@ -46,4 +46,35 @@ async function sendMessage(req: Request, res: Response) {
   }
 }
 
-export default sendMessage;
+export const loadMessages = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
+    const token = (req as any).cookies?.token || (req as any).cookies?.jwt;
+    let payload: any;
+    try {
+        payload = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid authentication token' });
+    }
+
+    const senderId = payload?.id || payload?.userId || payload?._id;
+
+    const messages = await Message.find({
+      $or: [
+        { sender: senderId, recipient: userId },
+        { sender: userId, recipient: senderId }
+      ]
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load messages' });
+  }
+};
