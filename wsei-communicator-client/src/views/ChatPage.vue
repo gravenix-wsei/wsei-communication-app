@@ -17,6 +17,8 @@ onMounted(async () => {
   // Connect Socket.IO
   if (authStore.token) {
     connect(authStore.token)
+    // Initialize Socket.IO listeners in the store
+    chatStore.initializeSocketListeners()
   }
 
   // Fetch users and messages
@@ -42,7 +44,10 @@ const handleLogout = () => {
       <div class="px-6 py-4 flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Chat Application</h1>
         <div class="flex items-center gap-4">
-          <span class="text-gray-600">{{ authStore.user?.email }}</span>
+          <div class="flex align-right gap-1 flex-col text-right">
+            <span class="text-gray-600">{{ authStore.user?.nickname }}</span>
+            <span class="text-gray-400">{{ authStore.user?.email }}</span>
+          </div>
           <button
             @click="handleLogout"
             class="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition duration-200"

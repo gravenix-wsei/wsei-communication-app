@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useChatStore } from '@/stores/chatStore'
 import { useAuthStore } from '@/stores/authStore'
-import { useSocket } from '@/composables/useSocket'
-import type { Message } from '@/stores/chatStore'
 
 const chatStore = useChatStore()
 const authStore = useAuthStore()
-const { on, off } = useSocket()
 
 const scrollContainer = ref<HTMLDivElement>()
 
@@ -27,24 +24,12 @@ const scrollToBottom = () => {
   }
 }
 
-const handleMessageReceive = (message: Message) => {
-  // Only add the message if it's from the current conversation
-  if (
-    (message.sender === chatStore.selectedUserId && message.recipient === currentUserId.value) ||
-    (message.sender === currentUserId.value && message.recipient === chatStore.selectedUserId)
-  ) {
-    chatStore.addMessage(message)
-    scrollToBottom()
-  }
-}
-
 onMounted(() => {
-  on('message:receive', handleMessageReceive)
   scrollToBottom()
 })
 
-onUnmounted(() => {
-  off('message:receive', handleMessageReceive)
+watch(messages, () => {
+  scrollToBottom()
 })
 
 const formatTime = (dateString: string) => {
@@ -84,7 +69,7 @@ const shouldShowDate = (index: number) => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-white">
+  <div class="flex-1 flex flex-col bg-white overflow-hidden">
     <!-- Empty state -->
     <div v-if="!selectedUser" class="flex-1 flex items-center justify-center">
       <div class="text-center text-gray-500">
@@ -99,7 +84,7 @@ const shouldShowDate = (index: number) => {
     </div>
 
     <!-- Messages -->
-    <div v-else class="flex flex-col h-full">
+    <div v-else class="flex flex-col flex-1 overflow-hidden">
       <!-- Messages container -->
       <div ref="scrollContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
         <div v-if="messages.length === 0" class="flex items-center justify-center h-full">

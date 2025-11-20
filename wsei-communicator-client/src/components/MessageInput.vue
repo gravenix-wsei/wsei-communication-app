@@ -2,9 +2,11 @@
 import { ref, computed } from 'vue'
 import { useChatStore } from '@/stores/chatStore'
 import { useSocket } from '@/composables/useSocket'
+import { useAuthStore } from '@/stores/authStore'
 import apiClient from '@/api/client'
 
 const chatStore = useChatStore()
+const authStore = useAuthStore()
 const { emit, isConnected } = useSocket()
 
 const content = ref('')
@@ -12,6 +14,7 @@ const loading = ref(false)
 
 const selectedUserId = computed(() => chatStore.selectedUserId)
 const canSend = computed(() => content.value.trim().length > 0 && !loading.value)
+const currentUserId = computed(() => authStore.user?.id)
 
 const handleSend = async () => {
   if (!canSend.value || !selectedUserId.value) return
@@ -21,22 +24,26 @@ const handleSend = async () => {
   content.value = ''
 
   try {
-    // Send via REST API as primary method
-    const response = await apiClient.post('/api/messages/send', {
-      recipientId: selectedUserId.value,
-      content: message
-    })
-
-    // Add message to store immediately
-    chatStore.addMessage(response.data)
-
-    // Also emit via Socket.IO if connected
+    // Try Socket.IO first (real-time)
     if (isConnected.value) {
       emit('message:send', {
         recipientId: selectedUserId.value,
         content: message
       })
+    } else {
+      // Fallback to REST API if Socket.IO not connected
+      const response = await apiClient.post('/api/messages/send', {
+        recipientId: selectedUserId.value,
+        content: message
+      })
     }
+    chatStore.addMessage({
+      _id: 'temp-id-' + Date.now(),
+      sender: currentUserId,
+      recipient: selectedUserId.value,
+      content: message,
+      createdAt: new Date().toISOString()
+    })
   } catch (err) {
     console.error('Failed to send message:', err)
     content.value = message // Restore message on error

@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import apiClient from '@/api/client'
+import { useSocket } from '@/composables/useSocket'
 
 export interface ChatUser {
   _id: string
@@ -22,11 +23,25 @@ export const useChatStore = defineStore('chat', () => {
   const selectedUserId = ref<string | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const socketInitialized = ref(false)
 
   const selectedUser = computed(() => users.value.find(u => u._id === selectedUserId.value))
   const sortedMessages = computed(() => [...messages.value].sort((a, b) => 
     new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   ))
+
+  const initializeSocketListeners = () => {
+    if (socketInitialized.value) return
+    
+    const { on } = useSocket()
+    
+    on('message:receive', (message: Message) => {
+      console.log('Received message via Socket.IO:', message)
+      addMessage(message)
+    })
+    
+    socketInitialized.value = true
+  }
 
   const fetchUsers = async () => {
     loading.value = true
@@ -60,7 +75,10 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   const addMessage = (message: Message) => {
-    messages.value.push(message)
+    // Prevent duplicate messages
+    if (!messages.value.find(m => m._id === message._id)) {
+      messages.value.push(message)
+    }
   }
 
   const clearMessages = () => {
@@ -79,6 +97,7 @@ export const useChatStore = defineStore('chat', () => {
     fetchUsers,
     loadMessages,
     addMessage,
-    clearMessages
+    clearMessages,
+    initializeSocketListeners
   }
 })

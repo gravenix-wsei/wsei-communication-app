@@ -55,7 +55,9 @@ async function start() {
 
   // Socket.IO connection handling
   io.on('connection', (socket: ExtendedSocket) => {
-    const token = socket.handshake.auth.token || socket.handshake.headers.cookie?.split('token=')[1];
+    // Try to get token from auth object first, then from cookie
+    const token = socket.handshake.auth.token || 
+                 socket.handshake.headers.cookie?.split('token=')[1]?.split(';')[0];
     
     if (!token) {
       console.log('Socket connection rejected - no token');
@@ -68,6 +70,7 @@ async function start() {
       const userId = payload?.id || payload?.userId || payload?._id;
       
       if (!userId) {
+        console.log('Socket connection rejected - no userId in token');
         socket.disconnect();
         return;
       }
@@ -78,6 +81,7 @@ async function start() {
 
       socket.on('message:send', async (data) => {
         try {
+          console.log('Socket message:send received', data);
           const { recipientId, content } = data;
           if (!recipientId || !content) {
             socket.emit('error', { message: 'recipientId and content are required' });
