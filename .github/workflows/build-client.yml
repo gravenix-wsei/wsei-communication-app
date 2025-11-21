@@ -25,7 +25,8 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: wsei-devops-cicd-app
-  AZURE_WEBAPP_PACKAGE_PATH: 'wsei-communicator-client'
+  SOURCE_PATH: 'wsei-communicator-client'
+  AZURE_WEBAPP_PACKAGE_PATH: 'wsei-communicator-client/dist'
   NODE_VERSION: '22.x'                # set this to the node version to use
 
 permissions:
@@ -34,16 +35,18 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.SOURCE_PATH }}
     steps:
     - uses: actions/checkout@v4
-    - name: Change directory for clients
-      run: cd wsei-communicator-client
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
+        cache-dependency-path: '${{ env.SOURCE_PATH }}/package-lock.json'
 
     - name: npm install, build, and test
       run: |
@@ -55,7 +58,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: node-app
-        path: .
+        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
   deploy:
     permissions:
@@ -71,9 +74,6 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: node-app
-    
-    - name: Change directory for clients
-      run: cd wsei-communicator-client
 
     - name: 'Deploy to Azure WebApp'
       id: deploy-to-webapp
