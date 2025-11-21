@@ -13,7 +13,7 @@ services:
     volumes:
       - ./wsei-communicator-server:/usr/src/app
       - /usr/src/app/node_modules
-    command: sh -c "npm install --silent && npm run start"
+    command: sh -c "npm run dev"
     ports:
       - "3000:3000"
     env_file:
@@ -27,9 +27,9 @@ services:
     volumes:
       - ./wsei-communicator-client:/usr/src/app
       - /usr/src/app/node_modules
-    command: sh -c "npm install --silent && npm run dev -- --host --port 5137"
+    command: sh -c "npm run dev -- --host --port 5173"
     ports:
-      - "5137:5137"
+      - "5173:5173"
     depends_on:
       - server
 
