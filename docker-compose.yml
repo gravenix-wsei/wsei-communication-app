@@ -21,5 +21,17 @@ services:
     depends_on:
       - mongo
 
+  client:
+    image: node:22
+    working_dir: /usr/src/app
+    volumes:
+      - ./wsei-communicator-client:/usr/src/app
+      - /usr/src/app/node_modules
+    command: sh -c "npm install --silent && npm run dev -- --host --port 5137"
+    ports:
+      - "5137:5137"
+    depends_on:
+      - server
+
 volumes:
   mongo-data:
