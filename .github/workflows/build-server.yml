@@ -21,7 +21,6 @@ name: Build and Deploy Server to Azure Web App
 on:
   push:
     branches: [ "master" ]
-    paths: [ "wsei-communicator-server/**" ]
   workflow_dispatch:
 
 env:
