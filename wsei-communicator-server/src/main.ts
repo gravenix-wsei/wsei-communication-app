@@ -56,9 +56,17 @@ async function start() {
 
   // Socket.IO connection handling
   io.on('connection', (socket: ExtendedSocket) => {
-    // Try to get token from auth object first, then from cookie
-    const token = socket.handshake.auth.token || 
-                 socket.handshake.headers.cookie?.split('token=')[1]?.split(';')[0];
+    // Try to get token from auth object first, then from Authorization header, then from cookie
+    let token = socket.handshake.auth.token;
+    
+    if (!token) {
+      const authHeader = socket.handshake.headers.authorization as string | undefined;
+      token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    }
+    
+    if (!token) {
+      token = socket.handshake.headers.cookie?.split('token=')[1]?.split(';')[0];
+    }
     
     if (!token) {
       console.log('Socket connection rejected - no token');
