@@ -7,6 +7,12 @@
       ],
       "rewrite": "/",
       "statusCode": 200
+    },
+    {
+      "route": "*",
+      "headers": {
+        "Access-Control-Allow-Origin": "https://wsei-devops-cicd-app-d6bwcmffevaxegbs.westeurope-01.azurewebsites.net"
+      }
     }
   ]
 }
