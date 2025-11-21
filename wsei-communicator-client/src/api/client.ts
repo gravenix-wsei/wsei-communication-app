@@ -11,7 +11,8 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
   if (token) {
-    document.cookie = `token=${token}; path=/`
+    const apiUrl = new URL(API_BASE_URL)
+    document.cookie = `token=${token}; path=/; domain=${apiUrl.hostname}`
   }
   return config
 })

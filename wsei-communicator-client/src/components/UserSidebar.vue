@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useChatStore } from '@/stores/chatStore'
+import { useAuthStore } from '@/stores/authStore'
 import type { ChatUser } from '@/stores/chatStore'
 
 const chatStore = useChatStore()
+const authStore = useAuthStore()
 
-const users = computed(() => chatStore.users)
+const users = computed(() =>chatStore.users.filter(user => user._id !== authStore.user?.id))
 const selectedUserId = computed(() => chatStore.selectedUserId)
 const isLoading = computed(() => chatStore.loading)
 
