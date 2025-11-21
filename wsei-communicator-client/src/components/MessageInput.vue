@@ -39,7 +39,7 @@ const handleSend = async () => {
     }
     chatStore.addMessage({
       _id: 'temp-id-' + Date.now(),
-      sender: currentUserId,
+      sender: currentUserId.value || '',
       recipient: selectedUserId.value,
       content: message,
       createdAt: new Date().toISOString()

@@ -52,6 +52,7 @@ async function start() {
   app.get('/api/users', getAllUsers);
   app.post('/api/messages/send', sendMessage);
   app.get('/api/messages/load', loadMessages);
+  app.get('/', (req, res) => {res.status(200).json({ status: 'ok' });});
 
   // Socket.IO connection handling
   io.on('connection', (socket: ExtendedSocket) => {
