@@ -15,10 +15,13 @@ export const getAllUsers = async (req: Request, res: Response) => {
 };
 
 export const sendMessage = async (req: Request, res: Response) => {
-  // senderId should NOT be provided in the body. It must come from signed JWT in cookie.
+  // senderId should NOT be provided in the body. It must come from signed JWT in Authorization header.
   const { recipientId, content } = req.body;
 
-  const token = (req as any).cookies?.token || (req as any).cookies?.jwt;
+  // Extract token from Authorization header
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  
   if (!token) {
     return res.status(401).json({ message: 'Authentication token missing' });
   }
@@ -67,12 +70,19 @@ export const loadMessages = async (req: Request, res: Response) => {
 
     const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-    const token = (req as any).cookies?.token || (req as any).cookies?.jwt;
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication token missing' });
+    }
+
     let payload: any;
     try {
-        payload = jwt.verify(token, JWT_SECRET);
+      payload = jwt.verify(token, JWT_SECRET);
     } catch (err) {
-        return res.status(401).json({ message: 'Invalid authentication token' });
+      return res.status(401).json({ message: 'Invalid authentication token' });
     }
 
     const senderId = payload?.id || payload?.userId || payload?._id;

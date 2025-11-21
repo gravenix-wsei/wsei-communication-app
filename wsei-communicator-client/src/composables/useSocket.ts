@@ -15,6 +15,9 @@ export const useSocket = () => {
 
     socket = io(API_URL, {
       auth: { token },
+      extraHeaders: {
+        Authorization: `Bearer ${token}`
+      },
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,

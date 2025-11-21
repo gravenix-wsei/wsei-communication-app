@@ -4,15 +4,14 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true // This ensures cookies are sent with all requests
+  withCredentials: true
 })
 
-// Add token to request cookies if available
+// Add token to Authorization header if available
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
   if (token) {
-    const apiUrl = new URL(API_BASE_URL)
-    document.cookie = `token=${token}; path=/; domain=${apiUrl.hostname}`
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
