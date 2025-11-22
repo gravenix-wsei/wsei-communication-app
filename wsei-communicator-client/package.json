@@ -15,8 +15,10 @@
     "test:ui": "vitest --ui",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "lint": "eslint . --fix --cache",
-    "format": "prettier --write src/"
+    "lint-fix": "eslint . --fix --cache",
+    "lint": "eslint .",
+    "format": "prettier --check src/",
+    "format-fix": "prettier --write src/"
   },
   "dependencies": {
     "pinia": "^3.0.3",
