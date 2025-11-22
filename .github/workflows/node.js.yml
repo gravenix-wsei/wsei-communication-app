@@ -32,6 +32,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         cache-dependency-path: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/package-lock.json'
+    - run: npm install --include=dev
     - run: npm run test
     - run: npm run format
     - run: npm run type-check
