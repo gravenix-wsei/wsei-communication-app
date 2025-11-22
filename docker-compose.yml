@@ -10,6 +10,12 @@ services:
   server:
     image: node:22
     working_dir: /usr/src/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - ./wsei-communicator-server:/usr/src/app
       - /usr/src/app/node_modules
