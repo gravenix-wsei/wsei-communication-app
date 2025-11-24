@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useChatStore } from '@/stores/chatStore'
 import { useAuthStore } from '@/stores/authStore'
+import TypingIndicator from './TypingIndicator.vue'
 
 const chatStore = useChatStore()
 const authStore = useAuthStore()
@@ -12,6 +13,9 @@ const isLoading = computed(() => chatStore.loading)
 const messages = computed(() => chatStore.sortedMessages)
 const selectedUser = computed(() => chatStore.selectedUser)
 const currentUserId = computed(() => authStore.user?.id)
+const isOtherUserTyping = computed(() => 
+  selectedUser.value ? chatStore.typingUsers.has(selectedUser.value._id) : false
+)
 
 const scrollToBottom = () => {
   if (scrollContainer.value) {
@@ -29,6 +33,10 @@ onMounted(() => {
 })
 
 watch(messages, () => {
+  scrollToBottom()
+})
+
+watch(isOtherUserTyping, () => {
   scrollToBottom()
 })
 
@@ -121,6 +129,9 @@ const shouldShowDate = (index: number) => {
             </div>
           </div>
         </template>
+
+        <!-- Typing indicator -->
+        <TypingIndicator v-if="isOtherUserTyping" />
       </div>
     </div>
   </div>

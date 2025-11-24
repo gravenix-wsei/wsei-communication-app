@@ -24,6 +24,8 @@ export const useChatStore = defineStore('chat', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const socketInitialized = ref(false)
+  const typingUsers = ref<Set<string>>(new Set())
+  const typingTimeouts = new Map<string, number>()
 
   const selectedUser = computed(() => users.value.find(u => u._id === selectedUserId.value))
   const sortedMessages = computed(() => [...messages.value].sort((a, b) => 
@@ -38,6 +40,15 @@ export const useChatStore = defineStore('chat', () => {
     on('message:receive', (message: Message) => {
       console.log('Received message via Socket.IO:', message)
       addMessage(message)
+    })
+    
+    on('user:typing', ({ userId, isTyping }: { userId: string; isTyping: boolean }) => {
+      console.log('Received user:typing event:', { userId, isTyping })
+      if (isTyping) {
+        setUserTyping(userId)
+      } else {
+        clearUserTyping(userId)
+      }
     })
     
     socketInitialized.value = true
@@ -81,9 +92,49 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  const setUserTyping = (userId: string) => {
+    console.log('setUserTyping called for userId:', userId)
+    // Clear existing timeout if any
+    const existingTimeout = typingTimeouts.get(userId)
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+    }
+    
+    // Add user to typing set
+    typingUsers.value.add(userId)
+    
+    // Set new timeout to clear typing indicator after 3 seconds
+    const timeout = setTimeout(() => {
+      console.log('Auto-clearing typing for userId:', userId)
+      typingUsers.value.delete(userId)
+      typingTimeouts.delete(userId)
+    }, 1500)
+    
+    typingTimeouts.set(userId, timeout)
+  }
+
+  const clearUserTyping = (userId: string) => {
+    console.log('clearUserTyping called for userId:', userId)
+    const timeout = typingTimeouts.get(userId)
+    if (timeout) {
+      clearTimeout(timeout)
+      typingTimeouts.delete(userId)
+    }
+    typingUsers.value.delete(userId)
+  }
+
+  const clearAllTyping = () => {
+    console.log('clearAllTyping called')
+    // Clear all timeouts
+    typingTimeouts.forEach(timeout => clearTimeout(timeout))
+    typingTimeouts.clear()
+    typingUsers.value.clear()
+  }
+
   const clearMessages = () => {
     messages.value = []
     selectedUserId.value = null
+    clearAllTyping()
   }
 
   return {
@@ -94,9 +145,13 @@ export const useChatStore = defineStore('chat', () => {
     sortedMessages,
     loading,
     error,
+    typingUsers,
     fetchUsers,
     loadMessages,
     addMessage,
+    setUserTyping,
+    clearUserTyping,
+    clearAllTyping,
     clearMessages,
     initializeSocketListeners
   }
