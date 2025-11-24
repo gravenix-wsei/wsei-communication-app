@@ -58,8 +58,12 @@ const handleSend = async () => {
 }
 
 const emitTyping = (isTyping: boolean) => {
-  if (!selectedUserId.value || !isConnected.value) return
+  if (!selectedUserId.value || !isConnected.value) {
+    console.log('Cannot emit typing: no selectedUserId or not connected')
+    return
+  }
   
+  console.log('Emitting user:typing:', { recipientId: selectedUserId.value, isTyping })
   emit('user:typing', {
     recipientId: selectedUserId.value,
     isTyping
@@ -98,7 +102,7 @@ watch(content, (newValue) => {
   // Set timeout to stop typing after 3 seconds
   typingTimeout = setTimeout(() => {
     stopTyping()
-  }, 3000)
+  }, 1500)
 })
 
 // Watch for conversation changes

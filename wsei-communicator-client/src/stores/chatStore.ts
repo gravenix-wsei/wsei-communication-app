@@ -24,7 +24,8 @@ export const useChatStore = defineStore('chat', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const socketInitialized = ref(false)
-  const typingUsers = ref<Map<string, number>>(new Map())
+  const typingUsers = ref<Set<string>>(new Set())
+  const typingTimeouts = new Map<string, number>()
 
   const selectedUser = computed(() => users.value.find(u => u._id === selectedUserId.value))
   const sortedMessages = computed(() => [...messages.value].sort((a, b) => 
@@ -42,6 +43,7 @@ export const useChatStore = defineStore('chat', () => {
     })
     
     on('user:typing', ({ userId, isTyping }: { userId: string; isTyping: boolean }) => {
+      console.log('Received user:typing event:', { userId, isTyping })
       if (isTyping) {
         setUserTyping(userId)
       } else {
@@ -91,31 +93,41 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   const setUserTyping = (userId: string) => {
+    console.log('setUserTyping called for userId:', userId)
     // Clear existing timeout if any
-    const existingTimeout = typingUsers.value.get(userId)
+    const existingTimeout = typingTimeouts.get(userId)
     if (existingTimeout) {
       clearTimeout(existingTimeout)
     }
     
+    // Add user to typing set
+    typingUsers.value.add(userId)
+    
     // Set new timeout to clear typing indicator after 3 seconds
     const timeout = setTimeout(() => {
+      console.log('Auto-clearing typing for userId:', userId)
       typingUsers.value.delete(userId)
-    }, 3000)
+      typingTimeouts.delete(userId)
+    }, 1500)
     
-    typingUsers.value.set(userId, timeout)
+    typingTimeouts.set(userId, timeout)
   }
 
   const clearUserTyping = (userId: string) => {
-    const timeout = typingUsers.value.get(userId)
+    console.log('clearUserTyping called for userId:', userId)
+    const timeout = typingTimeouts.get(userId)
     if (timeout) {
       clearTimeout(timeout)
-      typingUsers.value.delete(userId)
+      typingTimeouts.delete(userId)
     }
+    typingUsers.value.delete(userId)
   }
 
   const clearAllTyping = () => {
+    console.log('clearAllTyping called')
     // Clear all timeouts
-    typingUsers.value.forEach(timeout => clearTimeout(timeout))
+    typingTimeouts.forEach(timeout => clearTimeout(timeout))
+    typingTimeouts.clear()
     typingUsers.value.clear()
   }
 
