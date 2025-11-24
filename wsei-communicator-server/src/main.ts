@@ -124,6 +124,24 @@ async function start() {
         }
       });
 
+      socket.on('user:typing', (data) => {
+        try {
+          const { recipientId, isTyping } = data;
+          if (!recipientId) {
+            socket.emit('error', { message: 'recipientId is required' });
+            return;
+          }
+
+          // Emit typing status to recipient
+          io.to(`user:${recipientId}`).emit('user:typing', {
+            userId: socket.userId,
+            isTyping
+          });
+        } catch (err) {
+          console.error('Socket typing error', err);
+        }
+      });
+
       socket.on('disconnect', () => {
         console.log(`User ${userId} disconnected`);
       });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useChatStore } from '@/stores/chatStore'
 import { useSocket } from '@/composables/useSocket'
 import { useAuthStore } from '@/stores/authStore'
@@ -11,6 +11,8 @@ const { emit, isConnected } = useSocket()
 
 const content = ref('')
 const loading = ref(false)
+let typingTimeout: number | null = null
+let isCurrentlyTyping = false
 
 const selectedUserId = computed(() => chatStore.selectedUserId)
 const canSend = computed(() => content.value.trim().length > 0 && !loading.value)
@@ -22,6 +24,9 @@ const handleSend = async () => {
   loading.value = true
   const message = content.value.trim()
   content.value = ''
+
+  // Stop typing indicator immediately when sending
+  stopTyping()
 
   try {
     // Try Socket.IO first (real-time)
@@ -51,6 +56,62 @@ const handleSend = async () => {
     loading.value = false
   }
 }
+
+const emitTyping = (isTyping: boolean) => {
+  if (!selectedUserId.value || !isConnected.value) return
+  
+  emit('user:typing', {
+    recipientId: selectedUserId.value,
+    isTyping
+  })
+}
+
+const stopTyping = () => {
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+    typingTimeout = null
+  }
+  if (isCurrentlyTyping) {
+    emitTyping(false)
+    isCurrentlyTyping = false
+  }
+}
+
+// Watch content changes with debouncing
+watch(content, (newValue) => {
+  if (!newValue.trim() || !selectedUserId.value) {
+    stopTyping()
+    return
+  }
+
+  // Clear existing timeout
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+  }
+
+  // Emit typing started (only if not already typing)
+  if (!isCurrentlyTyping) {
+    emitTyping(true)
+    isCurrentlyTyping = true
+  }
+
+  // Set timeout to stop typing after 3 seconds
+  typingTimeout = setTimeout(() => {
+    stopTyping()
+  }, 3000)
+})
+
+// Watch for conversation changes
+watch(selectedUserId, (newUserId, oldUserId) => {
+  if (oldUserId && oldUserId !== newUserId) {
+    stopTyping()
+  }
+})
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  stopTyping()
+})
 </script>
 
 <template>
